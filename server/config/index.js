@@ -6,6 +6,6 @@ module.exports = {
     password: 'Ofakim123?',     
     database: 'behealthydb'     
   },
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3001,
   jwtSecret: process.env.JWT_SECRET || 'replace_this_with_env_secret'
 };
