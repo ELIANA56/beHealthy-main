@@ -1,5 +1,5 @@
 // Validation middleware for /api/register
-module.exports = async function validateRegister(req, res, next) {
+module.exports = async function validateRegister(req, res, next,db) {
   const { Full_Name, Age, Weight, Height, Goal_Type, Gender, Email, Password } = req.body;
 
   const missing = [];
@@ -22,11 +22,10 @@ module.exports = async function validateRegister(req, res, next) {
 
   // Check DB to ensure email is not already registered
   try {
-    const db = req.app && req.app.locals && req.app.locals.db;
-    if (!db) return res.status(500).json({ error: 'Database connection not available for validation.' });
+    if (!db) return res.status(500).json({ error: 'Database connection not available.' });
 
     const emailExists = await new Promise((resolve, reject) => {
-      db.query('SELECT User_ID FROM Users WHERE Email = ? LIMIT 1', [Email], (err, results) => {
+      db.query('SELECT User_ID FROM Users WHERE Email = ?', [req.body.Email], (err, results) => {
         if (err) return reject(err);
         resolve((results && results.length > 0));
       });

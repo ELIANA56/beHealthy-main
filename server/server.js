@@ -41,7 +41,7 @@ const articlesRoutes = require('./routes/articlesRoutes');
         host: dbConfig.host || 'localhost',
         user: dbConfig.user || 'behealthy',
         password: dbConfig.password || '',
-        database: dbConfig.database || 'BeHealthyDB'
+        database: dbConfig.database || 'behealthydb'
     });
 
     db.connect((err) => {
@@ -53,18 +53,31 @@ const articlesRoutes = require('./routes/articlesRoutes');
     app.locals.ai = ai;
     app.locals.db = db;
 
-    // 6. Montage des routes
-    app.use('/api/auth', authRoutes(db, ai));
-    app.use('/api/meals', mealsRoutes(db, ai));
-    app.use('/api/workouts', workoutsRoutes(db, ai));
-    app.use('/api/recipes', recipesRoutes(db, ai));
-    app.use('/api/articles', articlesRoutes(db, ai));
+   // 6. Montage des routes existantes
+   app.use('/api/auth', authRoutes(db, ai));
+   app.use('/api/meals', mealsRoutes(db, ai));
+   app.use('/api/workouts', workoutsRoutes(db, ai));
+   app.use('/api/recipes', recipesRoutes(db, ai));
+   app.use('/api/articles', articlesRoutes(db, ai));
 
-    // 7. Gestion des routes inexistantes (évite le HTML par défaut)
-    app.use((req, res) => {
-        res.status(404).json({ error: "Route non trouvée" });
-    });
+   // --- PLACEZ LA NOUVELLE ROUTE ICI ---
+   app.get('/api/user/:id', (req, res) => {
+       const userId = req.params.id;
+       const sql = "SELECT Full_Name, Age, Weight, Height, Goal_Type, Gender, Email FROM Users WHERE User_ID = ?";
+       
+       db.query(sql, [userId], (err, results) => {
+           if (err) return res.status(500).json({ error: "Erreur serveur" });
+           if (results.length === 0) return res.status(404).json({ error: "Utilisateur introuvable" });
+           res.json(results[0]);
+       });
+   });
 
-    const port = config.port || 3001;
+   // 7. Gestion des routes inexistantes (DOIT TOUJOURS ÊTRE EN DERNIER)
+   app.use((req, res) => {
+       res.status(404).json({ error: "Route non trouvée" });
+   });
+
+   const port = config.port || 3001;
     app.listen(port, () => console.log(`Server running on port ${port}`));
-})();
+
+})(); 
