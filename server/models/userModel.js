@@ -48,9 +48,18 @@ function updateLastLogin(db, userId) {
     });
   });
 }
+function getUserProfile(db, userId) {
+  const sql = `SELECT * FROM Users WHERE User_ID = ?`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0] || null);
+    });
+  });
+}
 
 
 
-module.exports = { createUser, createAuth, findUserByEmail, getPasswordHashByUserId, updateLastLogin };
+module.exports = { createUser, createAuth, findUserByEmail, getPasswordHashByUserId, updateLastLogin ,getUserProfile};
 
 
