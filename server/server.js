@@ -11,6 +11,7 @@ const mealsRoutes = require('./routes/mealsRoutes');
 const workoutsRoutes = require('./routes/workoutsRoutes');
 const recipesRoutes = require('./routes/recipesRoutes');
 const articlesRoutes = require('./routes/articlesRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 (async () => {
     const app = express();
@@ -59,6 +60,7 @@ const articlesRoutes = require('./routes/articlesRoutes');
    app.use('/api/workouts', workoutsRoutes(db, ai));
    app.use('/api/recipes', recipesRoutes(db, ai));
    app.use('/api/articles', articlesRoutes(db, ai));
+   app.use('/api/dashboard', dashboardRoutes);
 
    // --- PLACEZ LA NOUVELLE ROUTE ICI ---
    app.get('/api/user/:id', (req, res) => {

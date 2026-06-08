@@ -18,5 +18,21 @@ function getMealsByUser(db, userId) {
     });
   });
 }
+function getDailyCalories(db, userId) {
+  // On somme les calories où le User_ID correspond et où la date est aujourd'hui
+  const sql = `SELECT SUM(Total_Calories) as total FROM Meals_Log 
+               WHERE User_ID = ? AND DATE(Timestamp) = CURDATE()`;
+  
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId], (err, results) => {
+      if (err) return reject(err);
+      // Si aucune donnée, SUM renvoie null, on force à 0
+      resolve(results[0].total || 0);
+    });
+  });
+}
 
-module.exports = { insertMeal, getMealsByUser };
+// N'oubliez pas d'ajouter cette fonction à l'export
+module.exports = { insertMeal, getMealsByUser, getDailyCalories };
+
+
