@@ -1,10 +1,9 @@
 const express = require('express');
+const db = require('../utils/connection'); // Votre connexion DB
+const router = express.Router();
 const articlesController = require('../controllers/articlesController');
 
-module.exports = (db, ai) => {
-  const router = express.Router();
+// Route pour récupérer les articles
+router.get('/articles', (req, res) => articlesController.listArticles(req, res, { db }));
 
-  router.get('/articles', (req, res) => articlesController.listArticles(req, res, { db }));
-
-  return router;
-};
+module.exports = router;  

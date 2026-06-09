@@ -1,13 +1,14 @@
 const mealsModel = require('../models/mealsModel');
 const userModel = require('../models/userModel');
+const db = require('../utils/connection');
 
 exports.getDashboardData = async (req, res) => {
     try {
         const userId = req.params.userId;
         
         // On récupère les calories et le budget quotidien de l'utilisateur
-        const calories = await mealsModel.getDailyCalories(req.app.locals.db, userId);
-        const user = await userModel.getUserProfile(req.app.locals.db, userId);
+        const calories = await mealsModel.getDailyCalories(db, userId);
+        const user = await userModel.getUserProfile(db, userId);
         
         res.json({
             consumed: calories,

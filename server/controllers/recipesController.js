@@ -55,17 +55,12 @@ exports.getDynamicRecommendation = async (req, res, context) => {
           }
         `;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [prompt]
-        });
+        const recipeData = await ai.generateCustomRecipe(Target_Calories, User_Request);
 
-        let cleanText = response.text.trim();
-        if (cleanText.startsWith("```json")) cleanText = cleanText.replace(/```json|```/g, "").trim();
-        
-        const recipeData = JSON.parse(cleanText);
+        if (!recipeData || !recipeData.Recipe_Name) {
+          return res.status(500).json({ error: 'Unable to generate a valid recipe from AI.' });
+        }
 
-        // הכנת המערך לשמירה ב-DB
         const recipeValues = [
             recipeData.Recipe_Name,
             JSON.stringify(recipeData.Ingredients),

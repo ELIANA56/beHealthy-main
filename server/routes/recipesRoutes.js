@@ -1,17 +1,15 @@
 const express = require('express');
 const recipesController = require('../controllers/recipesController');
 
-module.exports = (db, ai) => {
-  const router = express.Router();
+const db = require('../utils/connection'); // Votre connexion DB
+const ai = require('../services/aiService'); // Votre service IA
 
-  // הנתיב הקיים שלך להצגת רשימת מתכונים
-  router.get('/recipes', (req, res) => recipesController.listRecipes(req, res, { db }));
+const router = express.Router();
 
-  // 🔥 הנתיב החדש והגאוני שהוספנו להמלצה הדינמית מבוססת ג'מיני!
-  // אנחנו מעבירים לקונטרולר גם את db וגם את ai שקיבלנו מהשרת
-  router.post('/dynamic-recommend', (req, res) => 
-    recipesController.getDynamicRecommendation(req, res, { db, ai })
-  );
+// Route pour récupérer les recettes
+router.get('/recipes', (req, res) => recipesController.listRecipes(req, res, { db }));
 
-  return router;
-};
+// Route pour créer une recette
+router.post('/recipes', (req, res) => recipesController.createRecipe(req, res, { db }));
+
+module.exports = router;

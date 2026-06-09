@@ -9,6 +9,10 @@ const db = mysql.createConnection({
   multipleStatements: true,
 });
 
+db.on('error', (err) => {
+  console.error('MySQL connection error:', err.message);
+});
+
 db.connect((err) => {
   if (err) {
     console.error('MySQL connection error:', err.message);
