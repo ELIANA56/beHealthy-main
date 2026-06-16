@@ -10,5 +10,6 @@ router.post('/register', validateRegister, (req, res) => authController.register
 
 // Route pour la connexion
 router.post('/login', validateLogin, (req, res) => authController.login(req, res, { db }));
+router.post('/google-login', (req, res) => authController.googleLogin(req, res, { db }));
 
 module.exports = router;    
