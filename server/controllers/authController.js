@@ -24,11 +24,11 @@ async function register(req, res, { db }) {
 
     db.query(sql, [Full_Name, Age, Weight, Height, Gender, Goal_Type, Daily_Calorie_Budget, Email, passwordHash], (err, result) => {
       if (err) {
-        console.error("Erreur SQL :", err);
+        console.error('SQL error:', err);
         return res.status(500).json({ error: 'Database error during registration.' });
       }
 
-      // C'EST ICI QUE TU AJOUTES LE TOKEN
+      // JWT token is added here after registration
       const token = jwt.sign({ userId: result.insertId, email: Email }, config.jwtSecret, { expiresIn: '7d' });
       
       res.status(201).json({ 
@@ -39,7 +39,7 @@ async function register(req, res, { db }) {
       });
     });
   } catch (e) {
-    console.error("Erreur catch :", e);
+    console.error('Catch error:', e);
     res.status(500).json({ error: 'Registration failed.' });
   }
 }

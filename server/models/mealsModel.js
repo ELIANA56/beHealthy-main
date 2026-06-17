@@ -19,20 +19,19 @@ function getMealsByUser(db, userId) {
   });
 }
 function getDailyCalories(db, userId) {
-  // On somme les calories où le User_ID correspond et où la date est aujourd'hui
+  // Sum calories for this user where the date is today
   const sql = `SELECT SUM(Total_Calories) as total FROM Meals_Log 
                WHERE User_ID = ? AND DATE(Timestamp) = CURDATE()`;
   
   return new Promise((resolve, reject) => {
     db.query(sql, [userId], (err, results) => {
       if (err) return reject(err);
-      // Si aucune donnée, SUM renvoie null, on force à 0
+      // If no data, SUM returns null — default to 0
       resolve(results[0].total || 0);
     });
   });
 }
 
-// N'oubliez pas d'ajouter cette fonction à l'export
 module.exports = { insertMeal, getMealsByUser, getDailyCalories };
 
 

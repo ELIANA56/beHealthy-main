@@ -1,8 +1,7 @@
 const articlesModel = require('../models/articlesModel');
 
 /**
- * פונקציית עזר שמחשבת איזה יום זה היום בשנה (מחזירה מספר בין 1 ל-365)
- * היום, ה-26 למאי 2026, היא תחזיר בדיוק 146.
+ * Helper that calculates the current day of the year (returns a number between 1 and 365)
  */
 function getDayOfYear() {
   const now = new Date();
@@ -13,13 +12,12 @@ function getDayOfYear() {
 }
 
 /**
- * הפונקציה המרכזית - שולפת את הפיד הדינמי הנוכחי (מתחילת השנה ועד היום)
+ * Main function - fetches the current dynamic feed (from start of year until today)
  */
 async function listArticles(req, res, { db }) {
   try {
-    const currentDay = getDayOfYear(); // יחזיר 146 היום
+    const currentDay = getDayOfYear();
 
-    // קריאה למודל עם היום הנוכחי בשנה
     const results = await articlesModel.getArticlesFeed(db, currentDay);
     
     res.json(results);

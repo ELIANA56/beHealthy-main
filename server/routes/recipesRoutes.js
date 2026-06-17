@@ -6,10 +6,10 @@ const ai = require('../services/aiService'); // Votre service IA
 
 const router = express.Router();
 
-// Route pour récupérer les recettes
+// Route to fetch recipes
 router.get('/recipes', (req, res) => recipesController.listRecipes(req, res, { db }));
 
-// Route pour créer une recette
+// Route to create a recipe
 router.post('/recipes', (req, res) => recipesController.createRecipe(req, res, { db }));
 
 module.exports = router;

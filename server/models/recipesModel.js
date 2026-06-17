@@ -1,4 +1,4 @@
-// פונקציה לשליפת כל המתכונים
+// Fetch all recipes
 function listRecipes(db) {
   const sql = `SELECT * FROM Recipes ORDER BY Recipe_ID DESC`;
   return new Promise((resolve, reject) => {
@@ -9,7 +9,7 @@ function listRecipes(db) {
   });
 }
 
-// פונקציה לשמירת מתכון חדש (של ג'מיני) ב-Database
+// Save a new recipe (from Gemini) to the database
 function createRecipe(db, recipeValues) {
   const sql = `
     INSERT INTO Recipes (Title, Ingredients, Instructions, Calories, Protein, Carbs, Fats, Created_By_AI)
@@ -18,7 +18,7 @@ function createRecipe(db, recipeValues) {
   return new Promise((resolve, reject) => {
     db.query(sql, recipeValues, (err, result) => {
       if (err) return reject(err);
-      resolve(result); // יחזיר את ה-insertId
+      resolve(result); // returns insertId
     });
   });
 }

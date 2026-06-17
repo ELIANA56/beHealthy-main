@@ -1,17 +1,16 @@
-// מייבאים את המודל החדש שייצרנו
+// Import the recipes model
 const recipesModel = require('../models/recipesModel');
 
 /**
- * 1. הצגת כל המתכונים באתר (השליפה מהמודל)
+ * 1. List all recipes on the site (fetch from model)
  */
 exports.listRecipes = async (req, res, context) => {
     const { db } = context;
 
     try {
-        // קריאה לפונקציה מהמודל וקבלת התוצאות
         const results = await recipesModel.listRecipes(db);
 
-        // הפיכת טקסט ה-JSON של המצרכים וההוראות בחזרה למערכים עבור ה-React
+        // Parse JSON text for ingredients and instructions back into arrays for React
         const formattedRecipes = results.map(recipe => ({
             ...recipe,
             Ingredients: JSON.parse(recipe.Ingredients || '[]'),
@@ -21,35 +20,34 @@ exports.listRecipes = async (req, res, context) => {
         return res.json(formattedRecipes);
     } catch (err) {
         console.error("Error in listRecipes controller:", err);
-        return res.status(500).json({ error: "שגיאה בשליפת מאגר המתכונים" });
+        return res.status(500).json({ error: "Error fetching recipe database" });
     }
 };
 
 /**
- * 2. יצירת מתכון דינמי דרך ג'מיני ושמירה ב-Database דרך המודל
+ * 2. Create a dynamic recipe via Gemini and save to database through the model
  */
 exports.getDynamicRecommendation = async (req, res, context) => {
     const { db, ai } = context;
     const { Target_Calories, User_Request } = req.body;
 
     if (!Target_Calories || !User_Request) {
-        return res.status(400).json({ error: "חובה לספק קלוריות יעד ובקשת מצרכים." });
+        return res.status(400).json({ error: "Target calories and ingredient request are required." });
     }
 
     try {
-        // קריאה לג'מיני
         const prompt = `
           You are an expert nutritionist and chef AI. Generate ONE delicious recipe that strictly fits these rules:
           1. Target Calories: Around ${Target_Calories} calories.
           2. Ingredients available: "${User_Request}".
           Provide your answer strictly as a valid JSON object without markdown blocks.
-          All text fields must be in Hebrew.
+          All text fields must be in English.
           Structure:
           {
-            "Recipe_Name": "שם המתכון",
-            "Prep_Time": "זמן הכנה",
-            "Ingredients": ["מצרך 1", "מצרך 2"],
-            "Instructions": ["שלב 1"],
+            "Recipe_Name": "Recipe name",
+            "Prep_Time": "Prep time",
+            "Ingredients": ["ingredient 1", "ingredient 2"],
+            "Instructions": ["step 1"],
             "Calories": ${Target_Calories},
             "Protein": (number), "Carbs": (number), "Fats": (number)
           }
@@ -71,14 +69,13 @@ exports.getDynamicRecommendation = async (req, res, context) => {
             recipeData.Fats
         ];
 
-        //  שימוש במודל לשמירת הנתונים!
         const result = await recipesModel.createRecipe(db, recipeValues);
-        
+
         recipeData.Recipe_ID = result.insertId;
         return res.json(recipeData);
 
     } catch (error) {
         console.error("Error in dynamic recipe handler:", error);
-        return res.status(500).json({ error: "תקלה בתהליך ייצור המתכון" });
+        return res.status(500).json({ error: "Error generating recipe" });
     }
 };

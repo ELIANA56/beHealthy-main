@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialisation sécurisée avec votre clé API
+// Secure initialization with your API key
 const genAI = new GoogleGenerativeAI(process.env.GENAI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
@@ -9,17 +9,17 @@ const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
  */
 function parseAIResponse(text) {
   try {
-    // Enlève les balises markdown si l'IA en ajoute
+    // Remove markdown tags if the AI adds them
     const cleaned = text.replace(/```json|```/g, "").trim();
     return JSON.parse(cleaned);
   } catch (e) {
-    console.error("Erreur de parsing JSON:", e);
+    console.error('JSON parsing error:', e);
     return null;
   }
 }
 
 /**
- * Analyse une image de repas pour extraire les données nutritionnelles
+ * Analyze a meal image to extract nutritional data
  */
 async function analyzeMeal(imageBase64) {
   if (!imageBase64) return null;
@@ -34,39 +34,40 @@ async function analyzeMeal(imageBase64) {
     const result = await model.generateContent([prompt, imagePart]);
     return parseAIResponse(result.response.text());
   } catch (error) {
-    console.error("Erreur lors de l'analyse de l'image:", error);
-    return { Meal_Name: 'Repas', Description: '', Protein_Grams: 0, Carbs_Grams: 0, Fats_Grams: 0, Total_Calories: 0, Ingredients: [] };
+    console.error('Error analyzing image:', error);
+    return { Meal_Name: 'Meal', Description: '', Protein_Grams: 0, Carbs_Grams: 0, Fats_Grams: 0, Total_Calories: 0, Ingredients: [] };
   }
 }
 
 /**
- * Génère une recette personnalisée en Hebrew
+ * Generate a custom recipe in English
  */
 async function generateCustomRecipe(targetCalories, userRequest) {
   const prompt = `
     You are an expert nutritionist. Generate ONE recipe for around ${targetCalories} calories using: "${userRequest}".
     Provide ONLY a valid JSON object without any markdown.
-    Structure (in Hebrew): {"Recipe_Name": "...", "Prep_Time": "...", "Ingredients": [], "Instructions": [], "Calories": 0, "Protein": 0, "Carbs": 0, "Fats": 0}`;
+    All text fields must be in English.
+    Structure: {"Recipe_Name": "...", "Prep_Time": "...", "Ingredients": [], "Instructions": [], "Calories": 0, "Protein": 0, "Carbs": 0, "Fats": 0}`;
 
   try {
     const result = await model.generateContent(prompt);
     const parsed = parseAIResponse(result.response.text());
     return parsed || getFallbackRecipe(targetCalories, userRequest);
   } catch (error) {
-    console.error("Erreur Gemini (utilisation du fallback):", error);
+    console.error('Gemini error (using fallback):', error);
     return getFallbackRecipe(targetCalories, userRequest);
   }
 }
 
 /**
- * Recette de secours si l'IA ne répond pas
+ * Fallback recipe if AI does not respond
  */
 function getFallbackRecipe(targetCalories, userRequest) {
   return {
-    Recipe_Name: "מוקפץ בריאות זריז (מתכון גיבוי)",
-    Prep_Time: "12 דקות",
-    Ingredients: [`הרכיבים שציינת: ${userRequest}`, "כף שמן זית", "מלח, פלפל ותבלינים לפי הטעם"],
-    Instructions: ["מחממים מחבת עמוקה עם כף שמן זית.", "מוסיפים את הרכיבים ומקפיצים כ-7-10 דקות.", "מתבלים, בודקים שהכל מוכן ומגישים חם."],
+    Recipe_Name: 'Quick Healthy Stir-Fry (fallback recipe)',
+    Prep_Time: '12 minutes',
+    Ingredients: [`Ingredients you listed: ${userRequest}`, '1 tbsp olive oil', 'Salt, pepper, and spices to taste'],
+    Instructions: ['Heat a deep pan with 1 tbsp olive oil.', 'Add the ingredients and stir-fry for 7-10 minutes.', 'Season, check that everything is cooked, and serve hot.'],
     Calories: targetCalories,
     Protein: 20,
     Carbs: 15,

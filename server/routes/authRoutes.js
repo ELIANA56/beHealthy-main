@@ -5,10 +5,10 @@ const authController = require('../controllers/authController');
 const validateRegister = require('../middleware/validateRegister');
 const validateLogin = require('../middleware/validateLogin');
 
-// Route pour l'inscription
+// Registration route
 router.post('/register', validateRegister, (req, res) => authController.register(req, res, { db }));
 
-// Route pour la connexion
+// Login route
 router.post('/login', validateLogin, (req, res) => authController.login(req, res, { db }));
 router.post('/firebase/verify', (req, res) => authController.verifyFirebaseToken(req, res, { db }));
 

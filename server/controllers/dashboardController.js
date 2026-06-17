@@ -6,15 +6,15 @@ exports.getDashboardData = async (req, res) => {
     try {
         const userId = req.params.userId;
         
-        // On récupère les calories et le budget quotidien de l'utilisateur
+        // Fetch user's calories consumed today and daily budget
         const calories = await mealsModel.getDailyCalories(db, userId);
         const user = await userModel.getUserProfile(db, userId);
-        
+
         res.json({
             consumed: calories,
-            budget: user.Daily_Calorie_Budget || 2000 // Valeur par défaut
+            budget: user.Daily_Calorie_Budget || 2000 // Default value
         });
     } catch (err) {
-        res.status(500).json({ error: "Erreur lors du calcul des stats" });
+        res.status(500).json({ error: 'Error calculating dashboard stats' });
     }
 };

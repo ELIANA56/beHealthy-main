@@ -19,7 +19,7 @@ const userRoutes = require('./routes/userRoutes');
     const app = express();
 
     app.use(cors());
-    app.use(express.json());
+    app.use(express.json({ limit: '15mb' }));
 
     // Logging
     app.use((req, res, next) => {
@@ -37,8 +37,8 @@ const userRoutes = require('./routes/userRoutes');
 
     // 404
     app.use((req, res) => {
-        console.log("בקשה הגיעה לנתיב לא קיים:", req.url);
-        return res.status(404).json({ error: "נתיב לא נמצא: " + req.url });
+        console.log('Request reached unknown route:', req.url);
+        return res.status(404).json({ error: 'Route not found: ' + req.url });
     });
     app.listen(config.port || 3001, () => console.log(`Server running on port ${config.port}`));
 })();

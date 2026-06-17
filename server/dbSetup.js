@@ -9,7 +9,7 @@ let con = mysql.createConnection({
 
 con.connect(function(err) {
     if (err) throw err;
-    console.log("Connecté à BeHealthyDB !");
+    console.log('Connected to BeHealthyDB!');
 
     // 1. Table Users unique (avec email et mot de passe)
     let sqlUsers = `CREATE TABLE IF NOT EXISTS Users (
@@ -28,13 +28,13 @@ con.connect(function(err) {
 
     con.query(sqlUsers, function(err) {
         if (err) throw err;
-        console.log("Table 'Users' créée.");
+        console.log("Table 'Users' created.");
 
         con.query(
             'ALTER TABLE Users ADD COLUMN Firebase_UID VARCHAR(128) UNIQUE',
             (alterErr) => {
                 if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
-                    console.error('Erreur ajout Firebase_UID:', alterErr);
+        console.error('Error adding Firebase_UID:', alterErr);
                 }
             }
         );
@@ -55,13 +55,13 @@ con.connect(function(err) {
             FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
         )`;
         con.query(sqlMeals, () => {
-            console.log("Table 'Meals_Log' créée.");
+            console.log("Table 'Meals_Log' created.");
 
             con.query(
                 'ALTER TABLE Meals_Log ADD COLUMN Food_Name VARCHAR(100)',
                 (alterErr) => {
                     if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
-                        console.error('Erreur ajout Food_Name:', alterErr);
+                        console.error('Error adding Food_Name:', alterErr);
                     }
                 }
             );
@@ -69,7 +69,7 @@ con.connect(function(err) {
                 'ALTER TABLE Meals_Log ADD COLUMN Description TEXT',
                 (alterErr) => {
                     if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
-                        console.error('Erreur ajout Description:', alterErr);
+                        console.error('Error adding Description:', alterErr);
                     }
                 }
             );
@@ -83,7 +83,7 @@ con.connect(function(err) {
                 Calories_Per_Serving INT
             )`;
             con.query(sqlRecipes, () => {
-                console.log("Table 'Recipes' créée.");
+                console.log("Table 'Recipes' created.");
 
                 // 4. Health_Trends
                 let sqlTrends = `CREATE TABLE IF NOT EXISTS Health_Trends (
@@ -94,7 +94,7 @@ con.connect(function(err) {
                     FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
                 )`;
                 con.query(sqlTrends, () => {
-                    console.log("Table 'Health_Trends' créée.");
+                    console.log("Table 'Health_Trends' created.");
 
                     // 5. Workouts
                     let sqlWorkouts = `CREATE TABLE IF NOT EXISTS Workouts (
@@ -106,8 +106,8 @@ con.connect(function(err) {
                         FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
                     )`;
                     con.query(sqlWorkouts, () => {
-                        console.log("Toutes les tables sont prêtes !");
-                        con.end(); // On ferme la connexion à la toute fin
+                        console.log('All tables are ready!');
+                        con.end(); // Close connection at the very end
                     });
                 });
             });
