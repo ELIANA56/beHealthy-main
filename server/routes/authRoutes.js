@@ -5,11 +5,8 @@ const authController = require('../controllers/authController');
 const validateRegister = require('../middleware/validateRegister');
 const validateLogin = require('../middleware/validateLogin');
 
-// Registration route
 router.post('/register', validateRegister, (req, res) => authController.register(req, res, { db }));
-
-// Login route
 router.post('/login', validateLogin, (req, res) => authController.login(req, res, { db }));
-router.post('/firebase/verify', (req, res) => authController.verifyFirebaseToken(req, res, { db }));
+router.post('/google', (req, res) => authController.googleAuth(req, res, { db }));
 
 module.exports = router;

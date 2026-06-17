@@ -24,21 +24,12 @@ con.connect(function(err) {
         Activity_Factor DECIMAL(4,3) DEFAULT 1.200,
         Email VARCHAR(100) UNIQUE,
         Password_Hash VARCHAR(255),
-        Firebase_UID VARCHAR(128) UNIQUE
+        Google_ID VARCHAR(128) UNIQUE
     )`;
 
     con.query(sqlUsers, function(err) {
         if (err) throw err;
         console.log("Table 'Users' created.");
-
-        con.query(
-            'ALTER TABLE Users ADD COLUMN Firebase_UID VARCHAR(128) UNIQUE',
-            (alterErr) => {
-                if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
-        console.error('Error adding Firebase_UID:', alterErr);
-                }
-            }
-        );
 
         // 2. Meals_Log
         let sqlMeals = `CREATE TABLE IF NOT EXISTS Meals_Log (

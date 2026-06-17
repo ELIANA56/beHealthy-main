@@ -2,12 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
-require('./utils/firebaseAdmin');
 const db = require('./utils/connection');
 const { migrateRecipesSchema } = require('./utils/migrateRecipes');
 const { migrateWorkoutsSchema } = require('./utils/migrateWorkouts');
 const { migrateMealsSchema } = require('./utils/migrateMeals');
 const { migrateUsersSchema } = require('./utils/migrateUsers');
+const { migrateAuthCleanup } = require('./utils/migrateAuthCleanup');
 
 
 // Import des routes
@@ -27,6 +27,7 @@ const userRoutes = require('./routes/userRoutes');
     await migrateWorkoutsSchema(db);
     await migrateMealsSchema(db);
     await migrateUsersSchema(db);
+    await migrateAuthCleanup(db);
 
     app.use(cors());
     app.use(express.json({ limit: '15mb' }));

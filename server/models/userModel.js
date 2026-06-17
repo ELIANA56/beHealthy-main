@@ -9,16 +9,6 @@ function createUser(db, { Full_Name, Age, Weight, Height, Daily_Calorie_Budget, 
   });
 }
 
-function createAuth(db, { User_ID, Password_Hash }) {
-  const sql = `INSERT INTO User_Auth (User_ID, Password_Hash, Last_Login) VALUES (?, ?, NOW())`;
-  return new Promise((resolve, reject) => {
-    db.query(sql, [User_ID, Password_Hash], (err, result) => {
-      if (err) return reject(err);
-      resolve(result.insertId);
-    });
-  });
-}
-
 function findUserByEmail(db, Email) {
   const sql = `SELECT User_ID, Email FROM Users WHERE Email = ?`;
   return new Promise((resolve, reject) => {
@@ -29,25 +19,6 @@ function findUserByEmail(db, Email) {
   });
 }
 
-function getPasswordHashByUserId(db, userId) {
-  const sql = `SELECT User_ID, Password_Hash FROM User_Auth WHERE User_ID = ?`;
-  return new Promise((resolve, reject) => {
-    db.query(sql, [userId], (err, results) => {
-      if (err) return reject(err);
-      resolve(results[0] || null);
-    });
-  });
-}
-
-function updateLastLogin(db, userId) {
-  const sql = `UPDATE User_Auth SET Last_Login = NOW() WHERE User_ID = ?`;
-  return new Promise((resolve, reject) => {
-    db.query(sql, [userId], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
-}
 function getUserProfile(db, userId) {
   const sql = `SELECT * FROM Users WHERE User_ID = ?`;
   return new Promise((resolve, reject) => {
@@ -105,14 +76,9 @@ function updatePassword(db, userId, passwordHash) {
 
 module.exports = {
   createUser,
-  createAuth,
   findUserByEmail,
   findUserByEmailExcept,
-  getPasswordHashByUserId,
-  updateLastLogin,
   getUserProfile,
   updateUserProfile,
   updatePassword,
 };
-
-
