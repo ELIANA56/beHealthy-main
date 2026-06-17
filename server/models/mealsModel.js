@@ -32,6 +32,45 @@ function getDailyCalories(db, userId) {
   });
 }
 
-module.exports = { insertMeal, getMealsByUser, getDailyCalories };
+const MEAL_CALORIE_SHARE = {
+  Breakfast: 0.25,
+  Lunch: 0.35,
+  Dinner: 0.30,
+  Snack: 0.10,
+};
+
+function getCaloriesForMealTypeToday(db, userId, mealType) {
+  const sql = `SELECT SUM(Total_Calories) as total FROM Meals_Log
+               WHERE User_ID = ? AND Meal_Type = ? AND DATE(Timestamp) = CURDATE()`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [userId, mealType], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0].total || 0);
+    });
+  });
+}
+
+async function getMealCalorieBudget(db, userId, mealType, dailyBudget) {
+  const share = MEAL_CALORIE_SHARE[mealType] || 0.25;
+  const mealBudget = Math.round(Number(dailyBudget) * share);
+  const consumedForMeal = await getCaloriesForMealTypeToday(db, userId, mealType);
+  const remaining = Math.max(mealBudget - consumedForMeal, 0);
+  return {
+    mealType,
+    mealBudget,
+    consumedForMeal,
+    remaining,
+    sharePercent: Math.round(share * 100),
+  };
+}
+
+module.exports = {
+  insertMeal,
+  getMealsByUser,
+  getDailyCalories,
+  getCaloriesForMealTypeToday,
+  getMealCalorieBudget,
+  MEAL_CALORIE_SHARE,
+};
 
 

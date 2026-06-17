@@ -1,16 +1,10 @@
 const express = require('express');
 const workoutsController = require('../controllers/workoutsController');
-const db = require('../utils/connection'); // Votre connexion DB
-const ai = require('../services/aiService'); // Votre service IA
+const db = require('../utils/connection');
+
 const router = express.Router();
 
-// Route to fetch workouts
-router.get('/workouts', (req, res) => workoutsController.listWorkouts(req, res, { db }));
-  router.post('/dynamic-recommend', (req, res) => 
-    workoutsController.getDynamicRecommendation(req, res, { db, ai })
-  );
+router.get('/user/:userId', (req, res) => workoutsController.getWorkouts(req, res, { db }));
+router.post('/', (req, res) => workoutsController.createWorkout(req, res, { db }));
+
 module.exports = router;
-
-
-
-  

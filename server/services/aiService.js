@@ -106,19 +106,64 @@ Provide output ONLY as a strict JSON object (no markdown, no conversational text
 }
 
 async function generateCustomRecipe(targetCalories, userRequest) {
-  const prompt = `
-    You are an expert nutritionist. Generate ONE recipe for around ${targetCalories} calories using: "${userRequest}".
-    Provide ONLY a valid JSON object without any markdown.
-    All text fields must be in English.
-    Structure: {"Recipe_Name": "...", "Prep_Time": "...", "Ingredients": [], "Instructions": [], "Calories": 0, "Protein": 0, "Carbs": 0, "Fats": 0}`;
+  return generateFridgeRecipe({
+    targetCalories,
+    ingredients: userRequest,
+    mealType: 'Lunch',
+    dietary: {},
+  });
+}
+
+async function generateFridgeRecipe({
+  targetCalories,
+  ingredients,
+  mealType,
+  dietary,
+  extraNotes,
+}) {
+  const ingredientList = Array.isArray(ingredients)
+    ? ingredients.join(', ')
+    : String(ingredients || '');
+
+  const rules = [];
+  if (dietary.glutenFree) {
+    rules.push('GLUTEN-FREE: Do not use wheat, barley, rye, regular pasta, or regular bread. Use naturally gluten-free options only.');
+  }
+  if (dietary.vegetarian) {
+    rules.push('VEGETARIAN: No meat, poultry, or fish. Use plant-based proteins only.');
+  }
+  if (dietary.kosher) {
+    rules.push('KOSHER: No pork, shellfish, or liver. Never combine meat and dairy in the same recipe. Prefer fish with vegetables, or dairy/vegetarian dishes without meat.');
+  }
+
+  const dietaryBlock = rules.length
+    ? `\nDietary rules (MUST follow):\n${rules.map((r) => `- ${r}`).join('\n')}`
+    : '';
+
+  const prompt = `You are an expert nutritionist and chef.
+The user has these ingredients available in the refrigerator/pantry (they selected what they have — you do NOT need to use all of them):
+${ingredientList}
+${extraNotes ? `\nAdditional notes: ${extraNotes}` : ''}
+${dietaryBlock}
+
+Rules:
+1. Target about ${targetCalories} calories for this single ${mealType || 'meal'} (NOT the full daily total).
+2. Pick a sensible subset of the listed items that work well together for one cohesive ${mealType || 'meal'}. You do NOT have to use every ingredient — skip items that do not fit the dish, calorie target, or dietary rules.
+3. Use only ingredients from the list above, plus basic pantry staples if needed (salt, pepper, oil, water).
+4. Prefer a focused recipe with roughly 3–8 main ingredients rather than cramming everything in.
+5. Provide ONLY a valid JSON object, no markdown.
+6. All text in English.
+
+Structure:
+{"Recipe_Name":"...","Prep_Time":"...","Ingredients":["..."],"Instructions":["..."],"Calories":${targetCalories},"Protein":0,"Carbs":0,"Fats":0,"Why_It_Fits":"one sentence explaining how it matches the diet and calorie target"}`;
 
   try {
     const text = await generateWithFallback([prompt]);
     const parsed = parseAIResponse(text);
-    return parsed || getFallbackRecipe(targetCalories, userRequest);
+    return parsed || getFallbackRecipe(targetCalories, ingredientList);
   } catch (error) {
-    console.error('Gemini error (using fallback):', error);
-    return getFallbackRecipe(targetCalories, userRequest);
+    console.error('Gemini recipe error (using fallback):', error);
+    return getFallbackRecipe(targetCalories, ingredientList);
   }
 }
 
@@ -135,4 +180,4 @@ function getFallbackRecipe(targetCalories, userRequest) {
   };
 }
 
-module.exports = { analyzeMeal, generateCustomRecipe };
+module.exports = { analyzeMeal, generateCustomRecipe, generateFridgeRecipe };

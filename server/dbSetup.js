@@ -85,6 +85,28 @@ con.connect(function(err) {
             con.query(sqlRecipes, () => {
                 console.log("Table 'Recipes' created.");
 
+                const recipeAlters = [
+                    'ADD COLUMN User_ID INT',
+                    "ADD COLUMN Meal_Type ENUM('Breakfast', 'Lunch', 'Dinner', 'Snack')",
+                    'ADD COLUMN Gluten_Free TINYINT(1) DEFAULT 0',
+                    'ADD COLUMN Vegetarian TINYINT(1) DEFAULT 0',
+                    'ADD COLUMN Kosher TINYINT(1) DEFAULT 0',
+                    'ADD COLUMN Source_Ingredients TEXT',
+                    'ADD COLUMN Prep_Time VARCHAR(50)',
+                    'ADD COLUMN Protein DECIMAL(6,2)',
+                    'ADD COLUMN Carbs DECIMAL(6,2)',
+                    'ADD COLUMN Fats DECIMAL(6,2)',
+                    'ADD COLUMN Why_It_Fits TEXT',
+                    'ADD COLUMN Created_At DATETIME DEFAULT CURRENT_TIMESTAMP',
+                ];
+                recipeAlters.forEach((clause) => {
+                    con.query(`ALTER TABLE Recipes ${clause}`, (alterErr) => {
+                        if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                            console.error('Recipes alter:', alterErr.message);
+                        }
+                    });
+                });
+
                 // 4. Health_Trends
                 let sqlTrends = `CREATE TABLE IF NOT EXISTS Health_Trends (
                     Trend_ID INT AUTO_INCREMENT PRIMARY KEY,

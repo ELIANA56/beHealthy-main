@@ -1,15 +1,24 @@
 const express = require('express');
 const recipesController = require('../controllers/recipesController');
-
-const db = require('../utils/connection'); // Votre connexion DB
-const ai = require('../services/aiService'); // Votre service IA
+const db = require('../utils/connection');
+const ai = require('../services/aiService');
 
 const router = express.Router();
 
-// Route to fetch recipes
-router.get('/recipes', (req, res) => recipesController.listRecipes(req, res, { db }));
+router.get('/user/:userId', (req, res) =>
+  recipesController.listUserRecipes(req, res, { db })
+);
 
-// Route to create a recipe
-router.post('/recipes', (req, res) => recipesController.createRecipe(req, res, { db }));
+router.get('/user/:userId/:recipeId', (req, res) =>
+  recipesController.getRecipe(req, res, { db })
+);
+
+router.get('/budget/:userId/:mealType', (req, res) =>
+  recipesController.getMealBudget(req, res, { db })
+);
+
+router.post('/generate', (req, res) =>
+  recipesController.generateFromFridge(req, res, { db, ai })
+);
 
 module.exports = router;
