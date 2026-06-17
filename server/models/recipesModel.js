@@ -120,9 +120,52 @@ function createRecipe(db, data) {
   });
 }
 
+function updateRecipe(db, recipeId, userId, data) {
+  const sql = `UPDATE Recipes SET
+    Title = ?, Ingredients = ?, Instructions = ?, Calories_Per_Serving = ?,
+    Meal_Type = ?, Gluten_Free = ?, Vegetarian = ?, Kosher = ?,
+    Prep_Time = ?, Protein = ?, Carbs = ?, Fats = ?, Why_It_Fits = ?
+    WHERE Recipe_ID = ? AND User_ID = ?`;
+  const params = [
+    data.Title,
+    data.Ingredients,
+    data.Instructions,
+    data.Calories_Per_Serving,
+    data.Meal_Type,
+    data.Gluten_Free ? 1 : 0,
+    data.Vegetarian ? 1 : 0,
+    data.Kosher ? 1 : 0,
+    data.Prep_Time || null,
+    data.Protein ?? null,
+    data.Carbs ?? null,
+    data.Fats ?? null,
+    data.Why_It_Fits || null,
+    recipeId,
+    userId,
+  ];
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, result) => {
+      if (err) return reject(err);
+      resolve(result.affectedRows > 0);
+    });
+  });
+}
+
+function deleteRecipe(db, recipeId, userId) {
+  const sql = `DELETE FROM Recipes WHERE Recipe_ID = ? AND User_ID = ?`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [recipeId, userId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result.affectedRows > 0);
+    });
+  });
+}
+
 module.exports = {
   listRecipesByUser,
   getRecipeById,
   createRecipe,
+  updateRecipe,
+  deleteRecipe,
   formatRecipeRow,
 };

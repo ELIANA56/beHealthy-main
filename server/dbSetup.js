@@ -21,6 +21,7 @@ con.connect(function(err) {
         Gender VARCHAR(20),
         Daily_Calorie_Budget INT,
         Goal_Type VARCHAR(50),
+        Activity_Factor DECIMAL(4,3) DEFAULT 1.200,
         Email VARCHAR(100) UNIQUE,
         Password_Hash VARCHAR(255),
         Firebase_UID VARCHAR(128) UNIQUE
@@ -70,6 +71,14 @@ con.connect(function(err) {
                 (alterErr) => {
                     if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
                         console.error('Error adding Description:', alterErr);
+                    }
+                }
+            );
+            con.query(
+                'ALTER TABLE Meals_Log ADD COLUMN Log_Date DATE',
+                (alterErr) => {
+                    if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Error adding Log_Date to Meals_Log:', alterErr);
                     }
                 }
             );
@@ -128,8 +137,24 @@ con.connect(function(err) {
                         FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
                     )`;
                     con.query(sqlWorkouts, () => {
+                        console.log("Table 'Workouts' created.");
+                        const workoutAlters = [
+                            "ADD COLUMN Intensity ENUM('Light', 'Moderate', 'Intense') DEFAULT 'Moderate'",
+                            'ADD COLUMN Notes TEXT',
+                            'ADD COLUMN Extra_Calories INT DEFAULT 0',
+                            'ADD COLUMN Extra_Protein INT DEFAULT 0',
+                            'ADD COLUMN Logged_At DATETIME DEFAULT CURRENT_TIMESTAMP',
+                            'ADD COLUMN Log_Date DATE',
+                        ];
+                        workoutAlters.forEach((clause) => {
+                            con.query(`ALTER TABLE Workouts ${clause}`, (alterErr) => {
+                                if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                                    console.error('Workouts alter:', alterErr.message);
+                                }
+                            });
+                        });
                         console.log('All tables are ready!');
-                        con.end(); // Close connection at the very end
+                        con.end();
                     });
                 });
             });

@@ -21,4 +21,12 @@ router.post('/generate', (req, res) =>
   recipesController.generateFromFridge(req, res, { db, ai })
 );
 
+router.put('/user/:userId/:recipeId', (req, res) =>
+  recipesController.updateRecipe(req, res, { db })
+);
+
+router.delete('/user/:userId/:recipeId', (req, res) =>
+  recipesController.deleteRecipe(req, res, { db })
+);
+
 module.exports = router;

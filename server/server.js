@@ -5,6 +5,9 @@ const config = require('./config');
 require('./utils/firebaseAdmin');
 const db = require('./utils/connection');
 const { migrateRecipesSchema } = require('./utils/migrateRecipes');
+const { migrateWorkoutsSchema } = require('./utils/migrateWorkouts');
+const { migrateMealsSchema } = require('./utils/migrateMeals');
+const { migrateUsersSchema } = require('./utils/migrateUsers');
 
 
 // Import des routes
@@ -21,6 +24,9 @@ const userRoutes = require('./routes/userRoutes');
     const app = express();
 
     await migrateRecipesSchema(db);
+    await migrateWorkoutsSchema(db);
+    await migrateMealsSchema(db);
+    await migrateUsersSchema(db);
 
     app.use(cors());
     app.use(express.json({ limit: '15mb' }));

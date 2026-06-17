@@ -1,7 +1,17 @@
 const recipesModel = require('../models/recipesModel');
 const mealsModel = require('../models/mealsModel');
 const userModel = require('../models/userModel');
+const workoutsModel = require('../models/workoutsModel');
 const aiService = require('../services/aiService');
+const { sumTodayNutrition } = require('../services/workoutNutrition');
+
+async function getAdjustedDailyBudget(db, userId) {
+  const user = await userModel.getUserProfile(db, userId);
+  const base = user?.Daily_Calorie_Budget || 2000;
+  const workouts = await workoutsModel.getWorkoutsToday(db, userId);
+  const bonus = sumTodayNutrition(workouts).extraCaloriesAllowed;
+  return { base, bonus, adjusted: base + bonus };
+}
 
 exports.listUserRecipes = async (req, res, context) => {
   const { db } = context;
@@ -42,9 +52,8 @@ exports.getMealBudget = async (req, res, context) => {
   const { userId, mealType } = req.params;
 
   try {
-    const user = await userModel.getUserProfile(db, userId);
-    const dailyBudget = user?.Daily_Calorie_Budget || 2000;
-    const budget = await mealsModel.getMealCalorieBudget(db, userId, mealType, dailyBudget);
+    const { adjusted } = await getAdjustedDailyBudget(db, userId);
+    const budget = await mealsModel.getMealCalorieBudget(db, userId, mealType, adjusted);
     return res.json(budget);
   } catch (err) {
     console.error('Error fetching meal budget:', err);
@@ -70,9 +79,8 @@ exports.generateFromFridge = async (req, res, context) => {
   }
 
   try {
-    const user = await userModel.getUserProfile(db, User_ID);
-    const dailyBudget = user?.Daily_Calorie_Budget || 2000;
-    const budget = await mealsModel.getMealCalorieBudget(db, User_ID, Meal_Type, dailyBudget);
+    const { adjusted } = await getAdjustedDailyBudget(db, User_ID);
+    const budget = await mealsModel.getMealCalorieBudget(db, User_ID, Meal_Type, adjusted);
 
     let targetCalories = Number(Target_Calories) || budget.remaining;
     if (targetCalories <= 0) {
@@ -124,3 +132,71 @@ exports.generateFromFridge = async (req, res, context) => {
 };
 
 exports.getDynamicRecommendation = exports.generateFromFridge;
+
+exports.updateRecipe = async (req, res, context) => {
+  const { db } = context;
+  const { userId, recipeId } = req.params;
+  const {
+    Title,
+    Meal_Type,
+    Ingredients,
+    Instructions,
+    Calories_Per_Serving,
+    Gluten_Free,
+    Vegetarian,
+    Kosher,
+    Prep_Time,
+    Protein,
+    Carbs,
+    Fats,
+    Why_It_Fits,
+  } = req.body;
+
+  if (!Title?.trim()) return res.status(400).json({ error: 'Recipe title is required.' });
+
+  try {
+    const ingredientsJson = Array.isArray(Ingredients)
+      ? JSON.stringify(Ingredients)
+      : JSON.stringify(String(Ingredients || '').split('\n').map((s) => s.trim()).filter(Boolean));
+    const instructionsJson = Array.isArray(Instructions)
+      ? JSON.stringify(Instructions)
+      : JSON.stringify(String(Instructions || '').split('\n').map((s) => s.trim()).filter(Boolean));
+
+    const updated = await recipesModel.updateRecipe(db, recipeId, userId, {
+      Title: Title.trim(),
+      Ingredients: ingredientsJson,
+      Instructions: instructionsJson,
+      Calories_Per_Serving: Number(Calories_Per_Serving) || 0,
+      Meal_Type: Meal_Type || 'Lunch',
+      Gluten_Free: Boolean(Gluten_Free),
+      Vegetarian: Boolean(Vegetarian),
+      Kosher: Boolean(Kosher),
+      Prep_Time,
+      Protein,
+      Carbs,
+      Fats,
+      Why_It_Fits,
+    });
+
+    if (!updated) return res.status(404).json({ error: 'Recipe not found.' });
+    const recipe = await recipesModel.getRecipeById(db, recipeId, userId);
+    return res.json({ message: 'Recipe updated.', recipe });
+  } catch (err) {
+    console.error('Error updating recipe:', err);
+    return res.status(500).json({ error: 'Error updating recipe.' });
+  }
+};
+
+exports.deleteRecipe = async (req, res, context) => {
+  const { db } = context;
+  const { userId, recipeId } = req.params;
+
+  try {
+    const deleted = await recipesModel.deleteRecipe(db, recipeId, userId);
+    if (!deleted) return res.status(404).json({ error: 'Recipe not found.' });
+    return res.json({ message: 'Recipe deleted.' });
+  } catch (err) {
+    console.error('Error deleting recipe:', err);
+    return res.status(500).json({ error: 'Error deleting recipe.' });
+  }
+};

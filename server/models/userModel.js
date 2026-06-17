@@ -58,8 +58,61 @@ function getUserProfile(db, userId) {
   });
 }
 
+function findUserByEmailExcept(db, email, excludeUserId) {
+  const sql = `SELECT User_ID FROM Users WHERE Email = ? AND User_ID != ?`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [email, excludeUserId], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0] || null);
+    });
+  });
+}
 
+function updateUserProfile(db, userId, data) {
+  const sql = `UPDATE Users SET
+    Full_Name = ?, Age = ?, Weight = ?, Height = ?, Gender = ?,
+    Goal_Type = ?, Activity_Factor = ?, Daily_Calorie_Budget = ?, Email = ?
+    WHERE User_ID = ?`;
+  const params = [
+    data.Full_Name,
+    data.Age,
+    data.Weight,
+    data.Height,
+    data.Gender,
+    data.Goal_Type,
+    data.Activity_Factor,
+    data.Daily_Calorie_Budget,
+    data.Email,
+    userId,
+  ];
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, result) => {
+      if (err) return reject(err);
+      resolve(result.affectedRows > 0);
+    });
+  });
+}
 
-module.exports = { createUser, createAuth, findUserByEmail, getPasswordHashByUserId, updateLastLogin ,getUserProfile};
+function updatePassword(db, userId, passwordHash) {
+  const sql = `UPDATE Users SET Password_Hash = ? WHERE User_ID = ?`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [passwordHash, userId], (err, result) => {
+      if (err) return reject(err);
+      resolve(result.affectedRows > 0);
+    });
+  });
+}
+
+module.exports = {
+  createUser,
+  createAuth,
+  findUserByEmail,
+  findUserByEmailExcept,
+  getPasswordHashByUserId,
+  updateLastLogin,
+  getUserProfile,
+  updateUserProfile,
+  updatePassword,
+};
 
 
