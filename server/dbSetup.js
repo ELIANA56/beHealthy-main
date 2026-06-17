@@ -22,12 +22,22 @@ con.connect(function(err) {
         Daily_Calorie_Budget INT,
         Goal_Type VARCHAR(50),
         Email VARCHAR(100) UNIQUE,
-        Password_Hash VARCHAR(255)
+        Password_Hash VARCHAR(255),
+        Firebase_UID VARCHAR(128) UNIQUE
     )`;
 
     con.query(sqlUsers, function(err) {
         if (err) throw err;
         console.log("Table 'Users' créée.");
+
+        con.query(
+            'ALTER TABLE Users ADD COLUMN Firebase_UID VARCHAR(128) UNIQUE',
+            (alterErr) => {
+                if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                    console.error('Erreur ajout Firebase_UID:', alterErr);
+                }
+            }
+        );
 
         // 2. Meals_Log
         let sqlMeals = `CREATE TABLE IF NOT EXISTS Meals_Log (
@@ -40,10 +50,29 @@ con.connect(function(err) {
             Timestamp DATETIME,
             Total_Calories INT,
             Image_Path VARCHAR(255),
+            Food_Name VARCHAR(100),
+            Description TEXT,
             FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE
         )`;
         con.query(sqlMeals, () => {
             console.log("Table 'Meals_Log' créée.");
+
+            con.query(
+                'ALTER TABLE Meals_Log ADD COLUMN Food_Name VARCHAR(100)',
+                (alterErr) => {
+                    if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Erreur ajout Food_Name:', alterErr);
+                    }
+                }
+            );
+            con.query(
+                'ALTER TABLE Meals_Log ADD COLUMN Description TEXT',
+                (alterErr) => {
+                    if (alterErr && alterErr.code !== 'ER_DUP_FIELDNAME') {
+                        console.error('Erreur ajout Description:', alterErr);
+                    }
+                }
+            );
 
             // 3. Recipes
             let sqlRecipes = `CREATE TABLE IF NOT EXISTS Recipes (

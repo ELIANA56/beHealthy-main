@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { getAuth } = require('firebase-admin/auth');
 const config = require('../config');
-const firebaseAdmin = require('../utils/firebaseAdmin');
 
 async function register(req, res, { db }) {
   try {
@@ -61,14 +61,14 @@ async function login(req, res, { db }) {
   }
 }
 
-async function googleLogin(req, res, { db }) {
+async function verifyFirebaseToken(req, res, { db }) {
   try {
     const { idToken } = req.body;
     if (!idToken) {
       return res.status(400).json({ error: 'idToken is required.' });
     }
 
-    const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
+    const decodedToken = await getAuth().verifyIdToken(idToken);
     const { uid, email, name } = decodedToken;
 
     if (!uid || !email) {
@@ -149,4 +149,4 @@ async function googleLogin(req, res, { db }) {
 }
 
 
-module.exports = { register, login, googleLogin };
+module.exports = { register, login, verifyFirebaseToken };

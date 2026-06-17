@@ -24,8 +24,9 @@ function parseAIResponse(text) {
 async function analyzeMeal(imageBase64) {
   if (!imageBase64) return null;
 
-  const prompt = `Analyze this meal image. Provide output ONLY as a strict JSON object (no markdown, no conversational text): 
-  {"Protein_Grams": 0.0, "Carbs_Grams": 0.0, "Fats_Grams": 0.0, "Total_Calories": 0}`;
+  const prompt = `Analyze this meal image. Identify the dish and estimate nutrition.
+  Provide output ONLY as a strict JSON object (no markdown, no conversational text):
+  {"Meal_Name": "name of the dish", "Description": "short description of what you see", "Protein_Grams": 0.0, "Carbs_Grams": 0.0, "Fats_Grams": 0.0, "Total_Calories": 0, "Ingredients": ["ingredient1", "ingredient2"]}`;
   
   const imagePart = { inlineData: { data: imageBase64, mimeType: 'image/jpeg' } };
   
@@ -34,7 +35,7 @@ async function analyzeMeal(imageBase64) {
     return parseAIResponse(result.response.text());
   } catch (error) {
     console.error("Erreur lors de l'analyse de l'image:", error);
-    return { Protein_Grams: 0, Carbs_Grams: 0, Fats_Grams: 0, Total_Calories: 0 };
+    return { Meal_Name: 'Repas', Description: '', Protein_Grams: 0, Carbs_Grams: 0, Fats_Grams: 0, Total_Calories: 0, Ingredients: [] };
   }
 }
 
