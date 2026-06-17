@@ -101,3 +101,23 @@ exports.updateUserProfile = async (req, res) => {
     res.status(500).json({ error: 'Failed to update profile.' });
   }
 };
+
+exports.deleteUserAccount = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const existing = await userModel.getUserProfile(db, userId);
+    if (!existing) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const deleted = await userModel.deleteUserAccount(db, userId);
+    if (!deleted) {
+      return res.status(500).json({ error: 'Failed to delete account.' });
+    }
+
+    res.json({ message: 'Account and all related data deleted.' });
+  } catch (err) {
+    console.error('Account delete error:', err);
+    res.status(500).json({ error: 'Failed to delete account.' });
+  }
+};

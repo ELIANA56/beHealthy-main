@@ -74,6 +74,33 @@ function updatePassword(db, userId, passwordHash) {
   });
 }
 
+function runQuery(db, sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
+
+async function deleteUserAccount(db, userId) {
+  const user = await getUserProfile(db, userId);
+  if (!user) return false;
+
+  await runQuery(db, 'DELETE FROM Recipes WHERE User_ID = ?', [userId]);
+  await runQuery(db, 'DELETE FROM Meals_Log WHERE User_ID = ?', [userId]);
+  await runQuery(db, 'DELETE FROM Workouts WHERE User_ID = ?', [userId]);
+
+  try {
+    await runQuery(db, 'DELETE FROM Health_Trends WHERE User_ID = ?', [userId]);
+  } catch (err) {
+    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
+  }
+
+  const result = await runQuery(db, 'DELETE FROM Users WHERE User_ID = ?', [userId]);
+  return result.affectedRows > 0;
+}
+
 module.exports = {
   createUser,
   findUserByEmail,
@@ -81,4 +108,5 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   updatePassword,
+  deleteUserAccount,
 };
