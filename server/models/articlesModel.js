@@ -1,14 +1,27 @@
-function getArticlesFeed(db, currentDay) {
-  // Fetch only articles whose Day_Index is less than or equal to the current day of year
-  const sql = `SELECT * FROM Content_Hub WHERE Day_Index <= ? ORDER BY Day_Index DESC`;
+function getWeeklyArticles(db, currentWeek) {
+  const sql = `SELECT Article_ID, Week_Number, Title, Category, Summary, Content, Created_At
+    FROM Content_Hub
+    WHERE Week_Number <= ?
+    ORDER BY Week_Number DESC`;
   return new Promise((resolve, reject) => {
-    db.query(sql, [currentDay], (err, results) => {
+    db.query(sql, [currentWeek], (err, results) => {
       if (err) return reject(err);
       resolve(results);
     });
   });
 }
 
-module.exports = { 
-  getArticlesFeed 
+function getArticleByWeek(db, weekNumber) {
+  const sql = `SELECT * FROM Content_Hub WHERE Week_Number = ? LIMIT 1`;
+  return new Promise((resolve, reject) => {
+    db.query(sql, [weekNumber], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0] || null);
+    });
+  });
+}
+
+module.exports = {
+  getWeeklyArticles,
+  getArticleByWeek,
 };

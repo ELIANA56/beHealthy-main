@@ -144,8 +144,21 @@ con.connect(function(err) {
                                 }
                             });
                         });
-                        console.log('All tables are ready!');
-                        con.end();
+
+                        let sqlContentHub = `CREATE TABLE IF NOT EXISTS Content_Hub (
+                            Article_ID INT AUTO_INCREMENT PRIMARY KEY,
+                            Week_Number INT NOT NULL UNIQUE,
+                            Title VARCHAR(150) NOT NULL,
+                            Category VARCHAR(50),
+                            Summary VARCHAR(255),
+                            Content TEXT NOT NULL,
+                            Created_At DATETIME DEFAULT CURRENT_TIMESTAMP
+                        )`;
+                        con.query(sqlContentHub, () => {
+                            console.log("Table 'Content_Hub' created.");
+                            console.log('All tables are ready!');
+                            con.end();
+                        });
                     });
                 });
             });
