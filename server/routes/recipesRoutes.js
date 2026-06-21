@@ -1,3 +1,4 @@
+/** RECIPES ROUTES — /api/recipes/* — AI generate, save, list, update, delete */
 const express = require('express');
 const recipesController = require('../controllers/recipesController');
 const db = require('../utils/connection');

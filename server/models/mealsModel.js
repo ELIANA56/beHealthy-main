@@ -1,3 +1,7 @@
+/**
+ * MEALS MODEL — SQL for Meals_Log table.
+ * Enforces once-per-day rule for Breakfast, Lunch, Dinner.
+ */
 const ONCE_PER_DAY_TYPES = ['Breakfast', 'Lunch', 'Dinner'];
 
 function countMainMealOnDate(db, userId, mealType, logDate, excludeMealId = null) {

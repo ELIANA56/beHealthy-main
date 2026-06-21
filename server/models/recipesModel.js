@@ -1,3 +1,6 @@
+/**
+ * RECIPES MODEL — SQL for saved AI-generated recipes (ingredients/instructions as JSON).
+ */
 function formatRecipeRow(recipe) {
   let ingredients = [];
   let instructions = [];

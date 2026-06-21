@@ -1,3 +1,10 @@
+/**
+ * AUTH ROUTES — URL paths for sign-up and sign-in.
+ *
+ * POST /api/auth/register — create account with email
+ * POST /api/auth/login    — email + password
+ * POST /api/auth/google   — Google OAuth credential
+ */
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/connection');

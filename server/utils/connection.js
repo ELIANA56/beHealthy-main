@@ -1,3 +1,7 @@
+/**
+ * DATABASE CONNECTION — Opens one MySQL connection to behealthydb.
+ * All models/controllers use this shared `db` object to run SQL queries.
+ */
 const mysql = require('mysql2');
 const config = require('../config');
 

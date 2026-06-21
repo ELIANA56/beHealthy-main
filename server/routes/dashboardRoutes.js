@@ -1,3 +1,4 @@
+/** DASHBOARD ROUTES — GET /api/dashboard/stats/:userId — Home page numbers */
 const express = require('express');
 const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');

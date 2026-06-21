@@ -1,3 +1,7 @@
+/**
+ * MEALS ROUTES — /api/meals/*
+ * analyze, log, list, today-types, update, delete
+ */
 const express = require('express');
 const router = express.Router();
 const mealsController = require('../controllers/mealsController');

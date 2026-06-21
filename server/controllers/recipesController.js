@@ -1,3 +1,6 @@
+/**
+ * קונטרולר מתכונים — יצירת מתכון עם AI מהמקרר, שמירה, עריכה ומחיקה.
+ */
 const recipesModel = require('../models/recipesModel');
 const mealsModel = require('../models/mealsModel');
 const userModel = require('../models/userModel');
@@ -5,6 +8,7 @@ const workoutsModel = require('../models/workoutsModel');
 const aiService = require('../services/aiService');
 const { sumTodayNutrition } = require('../services/workoutNutrition');
 
+// מחשב תקציב יומי מעודכן (בסיס + בונוס מאימונים של היום)
 async function getAdjustedDailyBudget(db, userId) {
   const user = await userModel.getUserProfile(db, userId);
   const base = user?.Daily_Calorie_Budget || 2000;
@@ -13,10 +17,11 @@ async function getAdjustedDailyBudget(db, userId) {
   return { base, bonus, adjusted: base + bonus };
 }
 
+// GET /api/recipes/user/:userId — רשימת מתכונים שמורים
 exports.listUserRecipes = async (req, res, context) => {
   const { db } = context;
   const { userId } = req.params;
-  const { mealType, glutenFree, vegetarian, kosher, search } = req.query;
+  const { mealType, glutenFree, vegetarian, kosher, search } = req.query; // סינון אופציונלי
 
   try {
     const recipes = await recipesModel.listRecipesByUser(db, userId, {
@@ -33,6 +38,7 @@ exports.listUserRecipes = async (req, res, context) => {
   }
 };
 
+// GET /api/recipes/user/:userId/:recipeId — מתכון בודד
 exports.getRecipe = async (req, res, context) => {
   const { db } = context;
   const { userId, recipeId } = req.params;
@@ -47,12 +53,14 @@ exports.getRecipe = async (req, res, context) => {
   }
 };
 
+// GET /api/recipes/budget/:userId/:mealType — כמה קלוריות נשארו לארוחה זו
 exports.getMealBudget = async (req, res, context) => {
   const { db } = context;
   const { userId, mealType } = req.params;
 
   try {
     const { adjusted } = await getAdjustedDailyBudget(db, userId);
+    // Breakfast 25%, Lunch 35%, Dinner 30%, Snack 10%
     const budget = await mealsModel.getMealCalorieBudget(db, userId, mealType, adjusted);
     return res.json(budget);
   } catch (err) {
@@ -61,6 +69,7 @@ exports.getMealBudget = async (req, res, context) => {
   }
 };
 
+// POST /api/recipes/generate-fridge — AI יוצר מתכון מהמצרכים שנבחרו
 exports.generateFromFridge = async (req, res, context) => {
   const { db } = context;
   const {
@@ -82,9 +91,9 @@ exports.generateFromFridge = async (req, res, context) => {
     const { adjusted } = await getAdjustedDailyBudget(db, User_ID);
     const budget = await mealsModel.getMealCalorieBudget(db, User_ID, Meal_Type, adjusted);
 
-    let targetCalories = Number(Target_Calories) || budget.remaining;
+    let targetCalories = Number(Target_Calories) || budget.remaining; // יעד קלוריות למתכון
     if (targetCalories <= 0) {
-      targetCalories = Math.max(Math.round(budget.mealBudget * 0.5), 150);
+      targetCalories = Math.max(Math.round(budget.mealBudget * 0.5), 150); // מינימום 150
     }
 
     const dietary = {
@@ -131,8 +140,9 @@ exports.generateFromFridge = async (req, res, context) => {
   }
 };
 
-exports.getDynamicRecommendation = exports.generateFromFridge;
+exports.getDynamicRecommendation = exports.generateFromFridge; // alias — אותה פונקציה
 
+// PUT /api/recipes/user/:userId/:recipeId — עריכת מתכון שמור
 exports.updateRecipe = async (req, res, context) => {
   const { db } = context;
   const { userId, recipeId } = req.params;
@@ -155,6 +165,7 @@ exports.updateRecipe = async (req, res, context) => {
   if (!Title?.trim()) return res.status(400).json({ error: 'Recipe title is required.' });
 
   try {
+    // מרכיבים והוראות — ממירים למחרוזת JSON לשמירה ב-DB
     const ingredientsJson = Array.isArray(Ingredients)
       ? JSON.stringify(Ingredients)
       : JSON.stringify(String(Ingredients || '').split('\n').map((s) => s.trim()).filter(Boolean));
@@ -187,6 +198,7 @@ exports.updateRecipe = async (req, res, context) => {
   }
 };
 
+// DELETE /api/recipes/user/:userId/:recipeId — מחיקת מתכון
 exports.deleteRecipe = async (req, res, context) => {
   const { db } = context;
   const { userId, recipeId } = req.params;

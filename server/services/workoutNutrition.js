@@ -1,3 +1,10 @@
+/**
+ * WORKOUT NUTRITION — Math for exercise and food targets.
+ *
+ * - estimateCaloriesBurned: MET formula (type × intensity × duration × weight)
+ * - getNutritionAdvice: eat back 60% of burned calories + extra protein
+ * - getDailyProteinTarget: weight × 1.2 grams per day
+ */
 const MET_VALUES = {
   Walking: { Light: 2.5, Moderate: 3.5, Intense: 4.5 },
   Running: { Light: 7, Moderate: 9.8, Intense: 11.5 },

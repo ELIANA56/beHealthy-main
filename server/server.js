@@ -1,57 +1,39 @@
+/**
+ * SERVER.JS — נקודת כניסה לשרת Express.
+ * טעינת routes, CORS, JSON. DB נוצר ידנית עם: node dbSetup.js
+ */
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const config = require('./config');
-const db = require('./utils/connection');
-const { migrateRecipesSchema } = require('./utils/migrateRecipes');
-const { migrateWorkoutsSchema } = require('./utils/migrateWorkouts');
-const { migrateMealsSchema } = require('./utils/migrateMeals');
-const { migrateUsersSchema } = require('./utils/migrateUsers');
-const { migrateAuthCleanup } = require('./utils/migrateAuthCleanup');
-const { migrateArticlesSchema } = require('./utils/migrateArticles');
 
-
-// Import des routes
 const authRoutes = require('./routes/authRoutes');
 const mealsRoutes = require('./routes/mealsRoutes');
 const workoutsRoutes = require('./routes/workoutsRoutes');
 const recipesRoutes = require('./routes/recipesRoutes');
-const articlesRoutes = require('./routes/articlesRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const userRoutes = require('./routes/userRoutes');
 
+const app = express();
 
-(async () => {
-    const app = express();
+app.use(cors());
+app.use(express.json({ limit: '15mb' }));
 
-    await migrateRecipesSchema(db);
-    await migrateWorkoutsSchema(db);
-    await migrateMealsSchema(db);
-    await migrateUsersSchema(db);
-    await migrateAuthCleanup(db);
-    await migrateArticlesSchema(db);
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
-    app.use(cors());
-    app.use(express.json({ limit: '15mb' }));
+app.use('/api/auth', authRoutes);
+app.use('/api/meals', mealsRoutes);
+app.use('/api/workouts', workoutsRoutes);
+app.use('/api/recipes', recipesRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/user', userRoutes);
 
-    // Logging
-    app.use((req, res, next) => {
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-        next();
-    });
+app.use((req, res) => {
+  console.log('Request reached unknown route:', req.url);
+  return res.status(404).json({ error: 'Route not found: ' + req.url });
+});
 
-    app.use('/api/auth', authRoutes);
-    app.use('/api/meals', mealsRoutes);
-    app.use('/api/workouts', workoutsRoutes);
-    app.use('/api/recipes', recipesRoutes);
-    app.use('/api/articles', articlesRoutes);
-    app.use('/api/dashboard', dashboardRoutes);
-    app.use('/api/user', userRoutes);
-
-    // 404
-    app.use((req, res) => {
-        console.log('Request reached unknown route:', req.url);
-        return res.status(404).json({ error: 'Route not found: ' + req.url });
-    });
-    app.listen(config.port || 3001, () => console.log(`Server running on port ${config.port}`));
-})();
+app.listen(config.port || 3001, () => console.log(`Server running on port ${config.port}`));

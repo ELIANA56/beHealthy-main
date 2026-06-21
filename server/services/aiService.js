@@ -1,3 +1,7 @@
+/**
+ * AI SERVICE — Calls Google Gemini for meal photo analysis and recipe generation.
+ * Needs GENAI_API_KEY in server .env. Returns JSON with nutrition or recipe fields.
+ */
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];

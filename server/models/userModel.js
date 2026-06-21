@@ -1,3 +1,7 @@
+/**
+ * USER MODEL — SQL queries for the Users table.
+ * Handles profile read/update, password update, and full account deletion.
+ */
 function createUser(db, { Full_Name, Age, Weight, Height, Daily_Calorie_Budget, Goal_Type, Gender, Email }) {
   const sql = `INSERT INTO Users (Full_Name, Age, Weight, Height, Daily_Calorie_Budget, Goal_Type, Gender, Email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
   const params = [Full_Name, Age, Weight, Height, Daily_Calorie_Budget, Goal_Type, Gender, Email];
@@ -90,12 +94,6 @@ async function deleteUserAccount(db, userId) {
   await runQuery(db, 'DELETE FROM Recipes WHERE User_ID = ?', [userId]);
   await runQuery(db, 'DELETE FROM Meals_Log WHERE User_ID = ?', [userId]);
   await runQuery(db, 'DELETE FROM Workouts WHERE User_ID = ?', [userId]);
-
-  try {
-    await runQuery(db, 'DELETE FROM Health_Trends WHERE User_ID = ?', [userId]);
-  } catch (err) {
-    if (err.code !== 'ER_NO_SUCH_TABLE') throw err;
-  }
 
   const result = await runQuery(db, 'DELETE FROM Users WHERE User_ID = ?', [userId]);
   return result.affectedRows > 0;

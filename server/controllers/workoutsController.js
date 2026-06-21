@@ -1,12 +1,16 @@
+/**
+ * קונטרולר אימונים — רישום, הערכת קלוריות שנשרפו, עריכה ומחיקה.
+ */
 const workoutsModel = require('../models/workoutsModel');
 const userModel = require('../models/userModel');
 const {
-  estimateCaloriesBurned,
-  getNutritionAdvice,
+  estimateCaloriesBurned, // חישוב קלוריות לפי סוג, משך, עוצמה, משקל
+  getNutritionAdvice, // כמה קלוריות/חלבון נוסף מותר לאכול
   sumTodayNutrition,
   getDailyProteinTarget,
 } = require('../services/workoutNutrition');
 
+// POST /api/workouts — שמירת אימון חדש
 async function createWorkout(req, res, { db }) {
   try {
     const {
@@ -24,10 +28,11 @@ async function createWorkout(req, res, { db }) {
     }
 
     const user = await userModel.getUserProfile(db, User_ID);
-    const weight = user?.Weight || 70;
+    const weight = user?.Weight || 70; // משקל לחישוב — ברירת מחדל 70 ק"ג
     const intensity = Intensity || 'Moderate';
 
     let caloriesBurned = Number(Calories_Burned);
+    // אם המשתמש לא הזין — מחשבים אוטומטית
     if (!caloriesBurned || caloriesBurned <= 0) {
       caloriesBurned = estimateCaloriesBurned(Workout_Type, Duration, intensity, weight);
     }
@@ -37,7 +42,7 @@ async function createWorkout(req, res, { db }) {
       duration: Duration,
       caloriesBurned,
       intensity,
-    });
+    }); // extraCaloriesAllowed = 60% ממה שנשרף
 
     const workoutId = await workoutsModel.createWorkout(db, {
       User_ID,
@@ -56,7 +61,7 @@ async function createWorkout(req, res, { db }) {
     res.status(201).json({
       message: 'Workout logged successfully!',
       workout: saved,
-      nutrition,
+      nutrition, // טיפים: כמה קלוריות/חלבון להוסיף
     });
   } catch (err) {
     console.error(err);
@@ -64,6 +69,7 @@ async function createWorkout(req, res, { db }) {
   }
 }
 
+// GET /api/workouts/user/:userId — כל האימונים של המשתמש
 async function getWorkouts(req, res, { db }) {
   try {
     const userId = req.params.userId;
@@ -75,6 +81,7 @@ async function getWorkouts(req, res, { db }) {
   }
 }
 
+// GET /api/workouts/today/:userId — סיכום אימונים של היום
 async function getTodaySummary(req, res, { db }) {
   try {
     const userId = req.params.userId;
@@ -99,9 +106,10 @@ async function getTodaySummary(req, res, { db }) {
   }
 }
 
+// GET /api/workouts/estimate — תצוגה מקדימה בלבד (לא שומר)
 async function estimateWorkout(req, res, { db }) {
   try {
-    const { userId, type, duration, intensity } = req.query;
+    const { userId, type, duration, intensity } = req.query; // פרמטרים מה-URL
     const user = await userModel.getUserProfile(db, userId);
     const weight = user?.Weight || 70;
     const level = intensity || 'Moderate';
@@ -121,6 +129,7 @@ async function estimateWorkout(req, res, { db }) {
   }
 }
 
+// PUT /api/workouts/:workoutId — עריכת אימון
 async function updateWorkout(req, res, { db }) {
   try {
     const { workoutId } = req.params;
@@ -172,6 +181,7 @@ async function updateWorkout(req, res, { db }) {
   }
 }
 
+// DELETE /api/workouts/:workoutId — מחיקת אימון
 async function deleteWorkout(req, res, { db }) {
   try {
     const { workoutId } = req.params;

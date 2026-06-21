@@ -1,3 +1,8 @@
+/**
+ * MIDDLEWARE ולידציה — עדכון פרופיל (PUT /api/user/:userId).
+ *
+ * בודק שדות חובה, אימייל, גיל/משקל/גובה בטווח, וסיסמה חדשה (אם יש).
+ */
 module.exports = function validateUpdateProfile(req, res, next) {
   const { Full_Name, Age, Weight, Height, Gender, Goal_Type, Email, New_Password } = req.body;
 
@@ -29,9 +34,10 @@ module.exports = function validateUpdateProfile(req, res, next) {
     return res.status(400).json({ error: 'Height must be between 50 and 272 cm.' });
   }
 
+  // New_Password אופציונלי — אבל אם ממלאים, לפחות 8 תווים
   if (New_Password && String(New_Password).length < 8) {
     return res.status(400).json({ error: 'New password must be at least 8 characters.' });
   }
 
-  next();
+  next(); // עובר ל-userController.updateUserProfile
 };

@@ -1,3 +1,12 @@
+/**
+ * CALORIE BUDGET — Calculates daily calorie target from profile data.
+ *
+ * Steps:
+ * 1. BMR (Mifflin-St Jeor) from age, weight, height, gender
+ * 2. TDEE = BMR × activity factor
+ * 3. Adjust for goal: הרזיה −500, מסה +300, תחזוקה 0
+ * 4. Never go below 1200 kcal/day
+ */
 const GOAL_ADJUSTMENTS = {
   הרזיה: -500,
   'Weight loss': -500,

@@ -1,7 +1,12 @@
-// Validation middleware for /api/register
-module.exports = async function validateRegister(req, res, next,db) {
+/**
+ * MIDDLEWARE ולידציה — הרשמה (POST /api/auth/register).
+ *
+ * בודק שכל השדות מלאים, בטווחים הגיוניים, ושהאימייל לא קיים כבר ב-DB.
+ */
+module.exports = async function validateRegister(req, res, next, db) {
   const { Full_Name, Age, Weight, Height, Goal_Type, Gender, Email, Password } = req.body;
 
+  // אוסף שדות חסרים/ריקים
   const missing = [];
   ['Full_Name', 'Age', 'Weight', 'Height', 'Goal_Type', 'Gender', 'Email', 'Password'].forEach((k) => {
     if (req.body[k] === undefined || req.body[k] === null || String(req.body[k]).trim() === '') missing.push(k);
@@ -16,18 +21,19 @@ module.exports = async function validateRegister(req, res, next,db) {
   const ageNum = Number(Age);
   const weightNum = Number(Weight);
   const heightNum = Number(Height);
+  // טווחים הגיוניים — מונע ערכים מטופשים
   if (!Number.isFinite(ageNum) || ageNum < 10 || ageNum > 120) return res.status(400).json({ error: 'Age must be a number between 10 and 120.' });
   if (!Number.isFinite(weightNum) || weightNum < 20 || weightNum > 400) return res.status(400).json({ error: 'Weight (kg) must be a number between 20 and 400.' });
   if (!Number.isFinite(heightNum) || heightNum < 50 || heightNum > 272) return res.status(400).json({ error: 'Height (cm) must be a number between 50 and 272.' });
 
-  // Check DB to ensure email is not already registered
+  // בדיקה ב-MySQL — האם האימייל כבר רשום
   try {
     if (!db) return res.status(500).json({ error: 'Database connection not available.' });
 
     const emailExists = await new Promise((resolve, reject) => {
       db.query('SELECT User_ID FROM Users WHERE Email = ?', [req.body.Email], (err, results) => {
         if (err) return reject(err);
-        resolve((results && results.length > 0));
+        resolve((results && results.length > 0)); // true = כבר קיים
       });
     });
 
@@ -37,5 +43,5 @@ module.exports = async function validateRegister(req, res, next,db) {
     return res.status(500).json({ error: 'Validation failed due to server error.' });
   }
 
-  next();
+  next(); // עובר ל-authController.register
 };

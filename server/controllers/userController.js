@@ -1,13 +1,18 @@
+/**
+ * קונטרולר פרופיל — קריאה, עדכון ומחיקת חשבון משתמש.
+ */
 const bcrypt = require('bcryptjs');
 const userModel = require('../models/userModel');
 const db = require('../utils/connection');
 const { calculateDailyCalorieBudget } = require('../utils/calorieBudget');
 
+// מסיר את Password_Hash לפני שליחה לדפדפן — הסיסמה לא יוצאת מהשרת
 function stripSensitive(user) {
   const { Password_Hash, ...profile } = user;
   return profile;
 }
 
+// GET /api/user/:userId — טעינת פרופיל
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await userModel.getUserProfile(db, req.params.userId);
@@ -15,13 +20,14 @@ exports.getUserProfile = async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
     const profile = stripSensitive(user);
-    profile.hasPassword = Boolean(user.Password_Hash);
+    profile.hasPassword = Boolean(user.Password_Hash); // האם יש סיסמה (Google-only = false)
     res.json(profile);
   } catch (err) {
     res.status(500).json({ error: 'Error fetching user profile.' });
   }
 };
 
+// PUT /api/user/:userId — עדכון פרופיל
 exports.updateUserProfile = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -43,6 +49,7 @@ exports.updateUserProfile = async (req, res) => {
       New_Password,
     } = req.body;
 
+    // האם האימייל החדש תפוס על ידי משתמש אחר?
     const emailTaken = await userModel.findUserByEmailExcept(db, Email, userId);
     if (emailTaken) {
       return res.status(400).json({ error: 'Email is already in use.' });
@@ -57,13 +64,16 @@ exports.updateUserProfile = async (req, res) => {
       Activity_Factor: actFactor,
       Goal_Type,
     };
+    // מחשב מחדש תקציב קלוריות אחרי שינוי משקל/גיל/מטרה
     const Daily_Calorie_Budget = calculateDailyCalorieBudget(profileInput);
     if (!Daily_Calorie_Budget) {
       return res.status(400).json({ error: 'Could not calculate calorie budget. Check age, weight, and height.' });
     }
 
+    // שינוי סיסמה — אופציונלי
     if (New_Password) {
       if (existing.Password_Hash) {
+        // יש סיסמה קיימת — חייבים את הישנה
         if (!Current_Password) {
           return res.status(400).json({ error: 'Current password is required to set a new password.' });
         }
@@ -102,6 +112,7 @@ exports.updateUserProfile = async (req, res) => {
   }
 };
 
+// DELETE /api/user/:userId — מחיקת חשבון + כל הנתונים
 exports.deleteUserAccount = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -110,7 +121,7 @@ exports.deleteUserAccount = async (req, res) => {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    const deleted = await userModel.deleteUserAccount(db, userId);
+    const deleted = await userModel.deleteUserAccount(db, userId); // מוחק גם ארוחות, אימונים, מתכונים
     if (!deleted) {
       return res.status(500).json({ error: 'Failed to delete account.' });
     }

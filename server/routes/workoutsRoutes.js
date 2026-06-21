@@ -1,3 +1,4 @@
+/** WORKOUTS ROUTES — /api/workouts/* — log, list, estimate, today summary, edit, delete */
 const express = require('express');
 const workoutsController = require('../controllers/workoutsController');
 const db = require('../utils/connection');

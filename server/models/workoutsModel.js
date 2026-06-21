@@ -1,3 +1,6 @@
+/**
+ * WORKOUTS MODEL — SQL for Workouts table (exercise logs per user per day).
+ */
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
