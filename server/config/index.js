@@ -1,15 +1,15 @@
 /**
  * CONFIG — Database connection settings, server port, JWT secret.
- * Password and host are here; sensitive keys (Google, AI) come from .env.
  */
-// Minimal configuration
+require('dotenv').config();
+
 module.exports = {
   db: {
     host: 'localhost',
-    user: 'root',                
-    password: 'Ofakim123?',     
-    database: 'behealthydb'     
+    user: 'root',
+    password: 'Ofakim123?',
+    database: 'behealthydb',
   },
   port: process.env.PORT || 3001,
-  jwtSecret: process.env.JWT_SECRET 
+  jwtSecret: process.env.JWT_SECRET || 'behealthy-local-dev-secret',
 };

@@ -9,11 +9,25 @@ const config = require('../config');
 const { calculateDailyCalorieBudget } = require('../utils/calorieBudget');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // מ-.env
 
-// יוצר JWT — תוקף 7 ימים
+// יוצר JWT — תוקף יום
 function createJwt(user, googleId) {
+  if (!config.jwtSecret) {
+    throw new Error('JWT_SECRET is not configured.');
+  }
   const payload = { userId: user.User_ID, email: user.Email };
-  if (googleId) payload.googleId = googleId; // מזהה Google אם רלוונטי
-  return jwt.sign(payload, config.jwtSecret, { expiresIn: '1d' });
+  if (googleId) payload.googleId = googleId;
+  return jwt.sign(payload, config.jwtSecret, { expiresIn: '7d' });
+}
+
+function sendAuthSuccess(res, { status = 200, message, userId, token, extra = {} }) {
+  res.status(status).json({ message, userId, token, ...extra });
+}
+
+function handleAuthTokenError(res, err, context) {
+  console.error(`${context} JWT error:`, err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Failed to create login token. Check JWT_SECRET in server/.env' });
+  }
 }
 
 // POST /api/auth/register — הרשמה עם אימייל
@@ -48,13 +62,18 @@ async function register(req, res, { db }) {
           return res.status(500).json({ error: 'Database error during registration.' });
         }
 
-        const token = createJwt({ User_ID: result.insertId, Email }); // insertId = מזהה המשתמש החדש
-        res.status(201).json({
-          message: 'Account created successfully!',
-          userId: result.insertId,
-          token,
-          Daily_Calorie_Budget,
-        });
+        try {
+          const token = createJwt({ User_ID: result.insertId, Email });
+          sendAuthSuccess(res, {
+            status: 201,
+            message: 'Account created successfully!',
+            userId: result.insertId,
+            token,
+            extra: { Daily_Calorie_Budget },
+          });
+        } catch (jwtErr) {
+          handleAuthTokenError(res, jwtErr, 'register');
+        }
       }
     );
   } catch (e) {
@@ -79,8 +98,12 @@ async function login(req, res, { db }) {
       }
       const match = bcrypt.compareSync(Password, user.Password_Hash); // השוואת סיסמה מוצפנת
       if (!match) return res.status(401).json({ error: 'Incorrect password.' });
-      const token = createJwt(user);
-      res.json({ message: 'Login successful', userId: user.User_ID, token });
+      try {
+        const token = createJwt(user);
+        sendAuthSuccess(res, { message: 'Login successful', userId: user.User_ID, token });
+      } catch (jwtErr) {
+        handleAuthTokenError(res, jwtErr, 'login');
+      }
     });
   } catch (e) {
     res.status(500).json({ error: 'Login failed.' });
@@ -130,19 +153,21 @@ async function googleAuth(req, res, { db }) {
               console.error('MySQL update error:', updateErr);
               return res.status(500).json({ error: 'Database error while linking account.' });
             }
-            return res.json({
-              message: 'Google login successful',
-              userId: user.User_ID,
-              token: createJwt(user, googleId),
-            });
+            try {
+              const token = createJwt(user, googleId);
+              sendAuthSuccess(res, { message: 'Google login successful', userId: user.User_ID, token });
+            } catch (jwtErr) {
+              handleAuthTokenError(res, jwtErr, 'googleAuth link');
+            }
           });
         } else {
           // כבר מקושר ל-Google — login רגיל
-          return res.json({
-            message: 'Google login successful',
-            userId: user.User_ID,
-            token: createJwt(user, googleId),
-          });
+          try {
+            const token = createJwt(user, googleId);
+            sendAuthSuccess(res, { message: 'Google login successful', userId: user.User_ID, token });
+          } catch (jwtErr) {
+            handleAuthTokenError(res, jwtErr, 'googleAuth');
+          }
         }
       } else {
         // משתמש חדש — יוצרים רשומה עם שם, אימייל ו-Google_ID בלבד
@@ -153,11 +178,17 @@ async function googleAuth(req, res, { db }) {
             return res.status(500).json({ error: 'Database error creating user.' });
           }
           const newUser = { User_ID: insertResult.insertId, Email: email };
-          return res.status(201).json({
-            message: 'Google account created',
-            userId: newUser.User_ID,
-            token: createJwt(newUser, googleId),
-          });
+          try {
+            const token = createJwt(newUser, googleId);
+            sendAuthSuccess(res, {
+              status: 201,
+              message: 'Google account created',
+              userId: newUser.User_ID,
+              token,
+            });
+          } catch (jwtErr) {
+            handleAuthTokenError(res, jwtErr, 'googleAuth create');
+          }
         });
       }
     });

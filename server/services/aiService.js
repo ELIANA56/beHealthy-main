@@ -4,7 +4,26 @@
  */
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const MODELS = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash-lite'];
+// Lite first — less likely to hit "high demand" 503 on busy models
+const MODELS = ['gemini-2.0-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash'];
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableGeminiError(error) {
+  const status = error?.status;
+  const message = String(error?.message || '').toLowerCase();
+  if ([429, 500, 502, 503, 504].includes(status)) return true;
+  return (
+    message.includes('quota') ||
+    message.includes('not found') ||
+    message.includes('high demand') ||
+    message.includes('service unavailable') ||
+    message.includes('overloaded') ||
+    message.includes('try again')
+  );
+}
 
 function getApiKey() {
   return process.env.GENAI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -54,6 +73,9 @@ function mapGeminiError(error) {
   if (error?.status === 429 || message.includes('quota')) {
     return new Error('Gemini API quota exceeded on all models. Wait a minute and try again.');
   }
+  if (error?.status === 503 || message.includes('high demand') || message.includes('service unavailable')) {
+    return new Error('Gemini is busy right now. Please wait a moment and try again, or enter meal details manually.');
+  }
   return error;
 }
 
@@ -63,17 +85,17 @@ async function generateWithFallback(parts) {
   }
 
   let lastError;
-  for (const modelName of MODELS) {
+  for (let i = 0; i < MODELS.length; i += 1) {
+    const modelName = MODELS[i];
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
       const result = await model.generateContent(parts);
       return result.response.text();
     } catch (error) {
       lastError = error;
-      const isQuota = error?.status === 429 || error?.message?.includes('quota');
-      const isNotFound = error?.status === 404 || error?.message?.includes('not found');
-      if (isQuota || isNotFound) {
-        console.warn(`Gemini model ${modelName} unavailable, trying next...`);
+      if (isRetryableGeminiError(error) && i < MODELS.length - 1) {
+        console.warn(`Gemini model ${modelName} unavailable (${error?.status || 'error'}), trying next...`);
+        await sleep(800);
         continue;
       }
       throw mapGeminiError(error);

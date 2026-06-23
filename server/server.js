@@ -37,3 +37,11 @@ app.use((req, res) => {
 });
 
 app.listen(config.port || 3001, () => console.log(`Server running on port ${config.port}`));
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (server still running):', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason);
+});
